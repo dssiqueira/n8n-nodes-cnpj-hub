@@ -1,0 +1,15 @@
+{
+	"node": "n8n-nodes-base.CNPJHUB",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": [
+		"Data & Storage"
+	],
+	"resources": {
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/douglassiqueira/n8n-nodes-cnpj-hub"
+			}
+		]
+	}
+}
