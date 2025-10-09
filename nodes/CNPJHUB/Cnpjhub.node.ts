@@ -16,7 +16,7 @@ export class Cnpjhub implements INodeType {
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"]}}',
-		description: 'Consulta dados de CNPJ através de 5 APIs públicas brasileiras',
+		description: 'Consulta dados de CNPJ através de 6 APIs públicas brasileiras',
 		defaults: {
 			name: 'CNPJ HUB',
 		},
@@ -91,6 +91,11 @@ export class Cnpjhub implements INodeType {
 						name: 'MinhaReceita',
 						value: 'minhareceita',
 						description: 'Https://minhareceita.org',
+					},
+					{
+						name: 'OpenCNPJ',
+						value: 'opencnpj',
+						description: 'Https://opencnpj.org',
 					},
 					{
 						name: 'ReceitaWS',
@@ -191,6 +196,7 @@ export class Cnpjhub implements INodeType {
 				{ name: 'minhareceita', url: `https://minhareceita.org/${cnpj}` },
 				{ name: 'brasilapi', url: `https://brasilapi.com.br/api/cnpj/v1/${cnpj}` },
 				{ name: 'receitaws', url: `https://receitaws.com.br/v1/cnpj/${cnpj}` },
+				{ name: 'opencnpj', url: `https://api.opencnpj.org/${cnpj}` },
 			];
 
 			let apisToTry: typeof apis;
@@ -440,6 +446,46 @@ export class Cnpjhub implements INodeType {
 					};
 					break;
 
+					case 'opencnpj':
+					normalized.cnpj = data.cnpj || '';
+					normalized.razao_social = data.razao_social || '';
+					normalized.nome_fantasia = data.nome_fantasia || '';
+					normalized.situacao = data.situacao_cadastral || '';
+					normalized.data_abertura = data.data_inicio_atividade || '';
+					normalized.porte = data.porte_empresa || '';
+					normalized.natureza_juridica = data.natureza_juridica || '';
+					normalized.capital_social = data.capital_social || '';
+					normalized.atividade_principal = {
+						codigo: data.cnae_principal || '',
+						descricao: ''
+					};
+					normalized.endereco = {
+						logradouro: data.logradouro || '',
+						numero: data.numero || '',
+						complemento: data.complemento || '',
+						bairro: data.bairro || '',
+						cep: data.cep || '',
+						municipio: data.municipio || '',
+						uf: data.uf || ''
+					};
+					normalized.contato = {
+						telefone: data.telefones?.map((tel: any) => `(${tel.ddd}) ${tel.numero}`).join(' / ') || '',
+						email: data.email || ''
+					};
+					normalized.socios = data.QSA?.map((socio: any) => ({
+						nome: socio.nome_socio,
+						cpf_cnpj: socio.cnpj_cpf_socio,
+						qualificacao: socio.qualificacao_socio || '',
+						data_entrada: socio.data_entrada_sociedade
+					})) || [];
+					normalized.atividades_secundarias = data.cnaes_secundarios || [];
+					normalized.simples = {
+						optante: data.opcao_simples || false,
+						data_opcao: data.data_opcao_simples || null,
+						data_exclusao: null
+					};
+					break;
+
 				default:
 					return data; // Retorna dados originais se API não reconhecida
 			}
@@ -451,8 +497,8 @@ export class Cnpjhub implements INodeType {
 			try {
 				const operation = this.getNodeParameter('operation', i) as string;
 				const apiStrategy = this.getNodeParameter('apiStrategy', i) as string;
-				const specificApi = apiStrategy === 'specific' 
-					? this.getNodeParameter('api', i) as string 
+				const specificApi = apiStrategy === 'specific'
+					? this.getNodeParameter('api', i) as string
 					: undefined;
 				const rateLimitDelayStr = this.getNodeParameter('rateLimitDelay', i) as string;
 				const dataFormat = this.getNodeParameter('dataFormat', i) as string;
@@ -490,7 +536,7 @@ export class Cnpjhub implements INodeType {
 						);
 
 						// Escolher formato dos dados baseado na preferência do usuário
-						const responseData = dataFormat === 'normalized' 
+						const responseData = dataFormat === 'normalized'
 							? normalizeApiResponse(result.data, result.apiUsed)
 							: result.data;
 

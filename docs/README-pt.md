@@ -8,7 +8,7 @@ Node customizado para n8n que permite consultar dados de CNPJ através de APIs p
 
 - 🔄 **Fallback Automático**: Se uma API falhar, tenta automaticamente as outras
 - ⏱️ **Rate Limiting**: Controle de delay entre requisições para evitar bloqueios
-- 📊 **5 APIs Públicas**: CNPJ.ws, CNPJA, MinhaReceita, BrasilAPI e ReceitaWS
+- 📊 **6 APIs Públicas**: CNPJ.ws, CNPJA, MinhaReceita, BrasilAPI, OpenCNPJ e ReceitaWS
 - 🔍 **Validação Inteligente**: Aceita CNPJ com ou sem formatação
 - 🛡️ **Tratamento Robusto**: Gerenciamento avançado de erros
 - 📝 **Metadados Detalhados**: Informações sobre APIs utilizadas e tentativas
@@ -28,13 +28,17 @@ Node customizado para n8n que permite consultar dados de CNPJ através de APIs p
 - **URL**: `https://minhareceita.org/{cnpj}`
 - **Características**: Dados detalhados com informações de regime tributário
 
-### 4. BrasilAPI (Oficial)
-- **URL**: `https://brasilapi.com.br/api/cnpj/v1/{cnpj}`
-- **Características**: API oficial do governo brasileiro
+### 4. OpenCNPJ (Gratuita e Atualizada)
+- **URL**: `https://opencnpj.org/`
+- **Características**: API gratuita com base atualizada mensalmente e opção de download completo
 
-### 5. ReceitaWS (Simples)
+### 5. BrasilAPI (Comunidade)
+- **URL**: `https://brasilapi.com.br/api/cnpj/v1/{cnpj}`
+- **Características**: Projeto open source da comunidade com dados confiáveis e atualizados frequentemente
+
+### 6. ReceitaWS (Simples)
 - **URL**: `https://receitaws.com.br/v1/cnpj/{cnpj}`
-- **Características**: API simples e rápida para consultas básicas
+- **Características**: API leve e rápida, ideal para consultas ágeis
 
 ## 💻 Como Usar
 
@@ -272,9 +276,8 @@ Contribuições são bem-vindas! Sinta-se à vontade para:
 
 ## 📞 Contato
 
-- **Autor**: Douglassiqueira
-- **Email**: douglassiqueira@gmail.com
-- **GitHub**: [douglassiqueira](https://github.com/douglassiqueira)
+- **Autor**: [Douglas Siqueira](https://www.linkedin.com/in/douglas-siqueira/)
+- **GitHub**: [dssiqueira](https://github.com/dssiqueira)
 
 ---
 

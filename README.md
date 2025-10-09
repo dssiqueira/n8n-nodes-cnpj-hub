@@ -19,7 +19,7 @@ This node allows you to easily retrieve comprehensive company information using 
 
 - 🔄 **Automatic Fallback**: If one API fails, automatically tries others
 - ⏱️ **Rate Limiting**: Configurable delay between requests to avoid blocking
-- 📊 **5 Public APIs**: CNPJ.ws, CNPJA, MinhaReceita, BrasilAPI and ReceitaWS
+- 📊 **6 Public APIs**: CNPJ.ws, CNPJA, MinhaReceita, BrasilAPI, OpenCNPJ and ReceitaWS
 - 🔍 **Smart Validation**: Accepts CNPJ with or without formatting
 - 🛡️ **Robust Error Handling**: Advanced error management
 - 📝 **Detailed Metadata**: Information about APIs used and attempts
@@ -39,13 +39,17 @@ This node allows you to easily retrieve comprehensive company information using 
 - **URL**: `https://minhareceita.org/{cnpj}`
 - **Features**: Detailed data with tax regime information
 
-### 4. BrasilAPI (Official)
-- **URL**: `https://brasilapi.com.br/api/cnpj/v1/{cnpj}`
-- **Features**: Official Brazilian government API
+### 4. OpenCNPJ (Free & Updated)
+- **URL**: `https://opencnpj.org/`
+- **Features**: Free API with monthly updated database and full download option
 
-### 5. ReceitaWS (Simple)
+### 5. BrasilAPI (Community)
+- **URL**: `https://brasilapi.com.br/api/cnpj/v1/{cnpj}`
+- **Features**: Open source community project with reliable and frequently updated data
+
+### 6. ReceitaWS (Simple)
 - **URL**: `https://receitaws.com.br/v1/cnpj/{cnpj}`
-- **Features**: Simple and fast API for basic queries
+- **Features**: Lightweight and fast API, ideal for quick queries
 
 ## 💻 How to Use
 
@@ -285,9 +289,8 @@ Contributions are welcome! Feel free to:
 
 ## 📞 Contact
 
-- **Author**: Douglassiqueira
-- **Email**: douglassiqueira@gmail.com
-- **GitHub**: [douglassiqueira](https://github.com/douglassiqueira)
+- **Author**: [Douglas Siqueira](https://www.linkedin.com/in/douglas-siqueira/)
+- **GitHub**: [dssiqueira](https://github.com/douglasdssiqueirasiqueira)
 
 ---
 
