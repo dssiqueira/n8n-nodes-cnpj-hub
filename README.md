@@ -57,7 +57,7 @@ This node allows you to easily retrieve comprehensive company information using 
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/douglassiqueira/n8n-nodes-cnpj-hub.git
+   git clone https://github.com/dssiqueira/n8n-nodes-cnpj-hub.git
    cd n8n-nodes-cnpj-hub
    ```
 
@@ -290,7 +290,8 @@ Contributions are welcome! Feel free to:
 ## 📞 Contact
 
 - **Author**: [Douglas Siqueira](https://www.linkedin.com/in/douglas-siqueira/)
-- **GitHub**: [dssiqueira](https://github.com/douglasdssiqueirasiqueira)
+- **GitHub**: [dssiqueira](https://github.com/dssiqueira)
+- **Site**: [dsiqueira.com](https://dsiqueira.com)
 
 ---
 
