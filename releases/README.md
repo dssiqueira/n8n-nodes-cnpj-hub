@@ -4,7 +4,7 @@ This directory contains detailed release notes for each version of n8n-nodes-cnp
 
 ## 📋 Available Releases
 
-- **[v0.2.0](v0.2.0.md)** - January 9, 2025 - Added OpenCNPJ support (6 APIs)
+- **[v0.2.0](v0.2.0.md)** - November 13, 2026 - OpenCNPJ, alphanumeric CNPJ, bug fixes
 - **[v0.1.0](v0.1.0.md)** - January 8, 2025 - Initial release (5 APIs)
 
 ## 📝 Format

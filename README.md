@@ -18,9 +18,10 @@ This node allows you to easily retrieve comprehensive company information using 
 ## 🚀 Features
 
 - 🔄 **Automatic Fallback**: If one API fails, automatically tries others
-- ⏱️ **Rate Limiting**: Configurable delay between requests to avoid blocking
+- ⏱️ **Rate Limiting**: Configurable minimum interval between calls to the same API (fallback switches APIs without waiting)
 - 📊 **6 Public APIs**: CNPJ.ws, CNPJA, MinhaReceita, BrasilAPI, OpenCNPJ and ReceitaWS
-- 🔍 **Smart Validation**: Accepts CNPJ with or without formatting
+- 🔍 **Smart Validation**: Accepts numeric and alphanumeric CNPJ (new format since July 2026), with or without formatting, and checks the check digits before calling any API
+- ⚡ **No Duplicate Queries**: The same CNPJ repeated in one execution is queried only once
 - 🛡️ **Robust Error Handling**: Advanced error management
 - 📝 **Detailed Metadata**: Information about APIs used and attempts
 - 🔄 **Data Normalization**: Standardized output format across all APIs for consistent workflows
@@ -133,6 +134,10 @@ The **Delay** field accepts n8n expressions, allowing dynamic values:
 - **With fallback**: `"={{$json.customDelay || 2000}}"`
 - **Condition-based**: `"={{$json.isPriority ? 500 : 2000}}"`
 - **Dynamic calculation**: `"={{Math.min($json.requestCount * 100, 5000)}}"`
+
+### How the delay works
+
+The delay is the **minimum interval between two requests to the same API**. The first request never waits, the time the request itself takes counts toward the interval, and when an API fails in fallback mode the next API is called immediately.
 
 ### Limits
 - **Minimum**: 0ms (no delay)

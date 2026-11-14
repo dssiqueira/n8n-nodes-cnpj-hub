@@ -7,9 +7,10 @@ Node customizado para n8n que permite consultar dados de CNPJ através de APIs p
 ## 🚀 Funcionalidades
 
 - 🔄 **Fallback Automático**: Se uma API falhar, tenta automaticamente as outras
-- ⏱️ **Rate Limiting**: Controle de delay entre requisições para evitar bloqueios
+- ⏱️ **Rate Limiting**: Intervalo mínimo configurável entre chamadas à mesma API (no fallback, troca de API sem esperar)
 - 📊 **6 APIs Públicas**: CNPJ.ws, CNPJA, MinhaReceita, BrasilAPI, OpenCNPJ e ReceitaWS
-- 🔍 **Validação Inteligente**: Aceita CNPJ com ou sem formatação
+- 🔍 **Validação Inteligente**: Aceita CNPJ numérico e alfanumérico (novo formato desde julho de 2026), com ou sem formatação, e confere os dígitos verificadores antes de chamar as APIs
+- ⚡ **Sem Consultas Duplicadas**: O mesmo CNPJ repetido numa execução é consultado uma vez só
 - 🛡️ **Tratamento Robusto**: Gerenciamento avançado de erros
 - 📝 **Metadados Detalhados**: Informações sobre APIs utilizadas e tentativas
 - 🔄 **Normalização de Dados**: Formato padronizado entre todas as APIs para workflows consistentes
@@ -185,6 +186,10 @@ O campo **Delay** aceita expressões do n8n, permitindo valores dinâmicos:
 - **Com fallback**: `"={{$json.customDelay || 2000}}"`
 - **Baseado em condição**: `"={{$json.isPriority ? 500 : 2000}}"`
 - **Cálculo dinâmico**: `"={{Math.min($json.requestCount * 100, 5000)}}"`
+
+### Como o delay funciona
+
+O delay é o **intervalo mínimo entre duas requisições à mesma API**. A primeira requisição não espera, o tempo da própria requisição conta no intervalo e, quando uma API falha no modo fallback, a próxima é chamada na hora.
 
 ### Limites
 - **Mínimo**: 0ms (sem delay)

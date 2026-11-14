@@ -1,0 +1,50 @@
+name: Publish to npm
+
+# Publica no npm quando uma tag de versão (ex.: v0.2.0) é enviada ao GitHub.
+# Autenticação via npm Trusted Publishing (OIDC): sem NPM_TOKEN.
+# Configuração única no npmjs.com: package > Settings > Trusted Publisher >
+# GitHub Actions, owner "dssiqueira", repo "n8n-nodes-cnpj-hub", workflow "publish.yml".
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+  id-token: write # necessário para OIDC e provenance
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          cache: npm
+
+      - name: Ensure npm supports trusted publishing (>= 11.5.1)
+        run: npm install -g npm@^11.5.1 && npm --version
+
+      - name: Check tag matches package.json version
+        run: |
+          PKG_VERSION="v$(node -p "require('./package.json').version")"
+          if [ "$PKG_VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $PKG_VERSION"
+            exit 1
+          fi
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run lint
+      - run: npx eslint -c .eslintrc.prepublish.js nodes package.json
+
+      - name: Publish
+        run: npm publish --provenance --access public
