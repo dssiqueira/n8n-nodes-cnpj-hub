@@ -1,5 +1,6 @@
 import {
 	ApplicationError,
+	deepCopy,
 	IExecuteFunctions,
 	INodeExecutionData,
 	INodeType,
@@ -10,6 +11,39 @@ import {
 	NodeOperationError,
 	sleep,
 } from 'n8n-workflow';
+
+/**
+ * Remove a máscara (pontos, barra, hífen, espaços) e padroniza em maiúsculas.
+ * Mantém letras para suportar o CNPJ alfanumérico (emitido desde 31/07/2026).
+ */
+const sanitizeCnpj = (value: string): string =>
+	String(value ?? '')
+		.toUpperCase()
+		.replace(/[^0-9A-Z]/g, '');
+
+/**
+ * Valida CNPJ numérico ou alfanumérico: 12 caracteres [0-9A-Z] + 2 dígitos verificadores.
+ * Cada caractere vale (código ASCII - 48), então dígitos mantêm o valor e 'A' = 17 ... 'Z' = 42.
+ */
+const isValidCnpj = (cnpj: string): boolean => {
+	if (!/^[0-9A-Z]{12}[0-9]{2}$/.test(cnpj)) return false;
+	if (/^(\d)\1{13}$/.test(cnpj)) return false;
+
+	const checkDigit = (base: string): number => {
+		let weight = 2;
+		let sum = 0;
+		for (let i = base.length - 1; i >= 0; i--) {
+			sum += (base.charCodeAt(i) - 48) * weight;
+			weight = weight === 9 ? 2 : weight + 1;
+		}
+		const remainder = sum % 11;
+		return remainder < 2 ? 0 : 11 - remainder;
+	};
+
+	const dv1 = checkDigit(cnpj.slice(0, 12));
+	const dv2 = checkDigit(cnpj.slice(0, 12) + dv1);
+	return cnpj.slice(12) === `${dv1}${dv2}`;
+};
 
 export class Cnpjhub implements INodeType {
 	description: INodeTypeDescription = {
@@ -119,7 +153,7 @@ export class Cnpjhub implements INodeType {
 				},
 				default: '1000',
 				placeholder: '1000 or ={{$json.delay}}',
-				description: 'Delay in milliseconds between requests. Accepts fixed values or expressions (e.g: 1000, ={{$JSON.delay}}).',
+				description: 'Minimum interval in milliseconds between two requests to the same API. The first request and switching to another API in fallback mode do not wait. Accepts fixed values or expressions (e.g: 1000, ={{$JSON.delay}}).',
 			},
 			{
 				displayName: 'Data Format',
@@ -154,8 +188,8 @@ export class Cnpjhub implements INodeType {
 					},
 				},
 				default: '',
-				placeholder: '11.222.333/0001-81 or 11222333000181',
-				description: 'CNPJ to query (with or without formatting)',
+				placeholder: '11.222.333/0001-81, 11222333000181 or 12.ABC.345/01DE-35',
+				description: 'CNPJ to query, numeric or alphanumeric, with or without formatting',
 				required: true,
 			},
 		],
@@ -165,15 +199,27 @@ export class Cnpjhub implements INodeType {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 
-		// Função auxiliar para fazer requisição com delay (rate limiting)
+		// Momento da última chamada a cada API, para o rate limiting por API
+		const lastCallAt: Record<string, number> = {};
+
+		// Resultados já obtidos nesta execução (evita consultar o mesmo CNPJ duas vezes)
+		const resultCache = new Map<string, { data: any; apiUsed: string; errors: string[] }>();
+
+		// Faz a requisição respeitando um intervalo mínimo entre chamadas à MESMA API.
+		// A primeira chamada e a troca de API no fallback não esperam.
 		const makeRequestWithDelay = async (
+			apiName: string,
 			url: string,
 			delay: number,
 		): Promise<any> => {
-			// Aplicar delay se especificado
-			if (delay > 0) {
-				await sleep(delay);
+			const previous = lastCallAt[apiName];
+			if (delay > 0 && previous !== undefined) {
+				const wait = previous + delay - Date.now();
+				if (wait > 0) {
+					await sleep(wait);
+				}
 			}
+			lastCallAt[apiName] = Date.now();
 
 			return await this.helpers.httpRequest({
 				method: 'GET',
@@ -217,7 +263,7 @@ export class Cnpjhub implements INodeType {
 
 			for (const api of apisToTry) {
 				try {
-					const response = await makeRequestWithDelay(api.url, delay);
+					const response = await makeRequestWithDelay(api.name, api.url, delay);
 
 					// Verificar se a resposta contém erro específico da ReceitaWS
 					if (api.name === 'receitaws' && response.status === 'ERROR') {
@@ -528,27 +574,42 @@ export class Cnpjhub implements INodeType {
 					);
 				}
 
-				// Limpar CNPJ (remover caracteres especiais)
-				cnpj = cnpj.replace(/[^0-9]/g, '');
+				// Limpar CNPJ (remove máscara, mantém letras do formato alfanumérico)
+				cnpj = sanitizeCnpj(cnpj);
 
-				// Validar CNPJ
-				if (!cnpj || cnpj.length !== 14) {
+				// Validar formato e dígitos verificadores antes de gastar chamadas às APIs
+				if (cnpj.length !== 14) {
 					throw new NodeOperationError(
 						this.getNode(),
-						'CNPJ must have 14 digits',
+						'CNPJ must have 14 characters (numeric or alphanumeric)',
+						{ itemIndex: i },
+					);
+				}
+				if (!isValidCnpj(cnpj)) {
+					throw new NodeOperationError(
+						this.getNode(),
+						`Invalid CNPJ: ${cnpj} (check digits do not match)`,
 						{ itemIndex: i },
 					);
 				}
 
 				if (operation === 'consultarCnpj') {
 					try {
-						const result = await tryApiWithFallback(
-							cnpj,
-							apiStrategy,
-							specificApi,
-							rateLimitDelay,
-							i,
-						);
+						// Reaproveita o resultado se o mesmo CNPJ já foi consultado nesta execução
+						const cacheKey = `${apiStrategy}:${specificApi ?? ''}:${cnpj}`;
+						let result = resultCache.get(cacheKey);
+						if (result) {
+							result = { ...result, data: deepCopy(result.data) };
+						} else {
+							result = await tryApiWithFallback(
+								cnpj,
+								apiStrategy,
+								specificApi,
+								rateLimitDelay,
+								i,
+							);
+							resultCache.set(cacheKey, { ...result, data: deepCopy(result.data) });
+						}
 
 						// Escolher formato dos dados baseado na preferência do usuário
 						const responseData = dataFormat === 'normalized'

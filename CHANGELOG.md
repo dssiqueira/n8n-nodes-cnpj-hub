@@ -7,18 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 📋 Quick Summary
 
-### [0.2.1] - 2026-11-13
+### [0.2.0] - 2026-11-13
+- ✨ Added OpenCNPJ API support (6th API)
+- ✨ Alphanumeric CNPJ support + check-digit validation before any API call
+- ⚡ Delay is now a per-API minimum interval (fallback switches APIs without waiting)
+- ⚡ Repeated CNPJs in the same execution are queried only once
 - 🐛 Fixed `"undefined"` in CNPJ.ws phone normalization (#1)
 - 🐛 Codex file now uses the package name instead of `n8n-nodes-base` (#2)
-- 🔧 Specific-API failures now raise `NodeApiError` with HTTP status
-- 🔧 Fixed TypeScript build (`setTimeout` → `sleep`)
-
-[View detailed changelog →](changelog/v0.2.1.md)
-
-### [0.2.0] - 2025-01-09
-- ✨ Added OpenCNPJ API support (6th API)
-- 📝 Updated documentation for 6 APIs
-- 🔧 Corrected BrasilAPI description
+- 🔧 Specific-API failures raise `NodeApiError` with HTTP status
+- 🔧 Fixed TypeScript build; corrected BrasilAPI description
+- 📝 Updated documentation
 
 [View detailed changelog →](changelog/v0.2.0.md)
 
@@ -36,8 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For detailed information about each version, including technical details, breaking changes, and migration guides, see the [changelog directory](changelog/).
 
-- **[v0.2.1](changelog/v0.2.1.md)** - Bug fixes (#1, #2) and better API errors
-- **[v0.2.0](changelog/v0.2.0.md)** - OpenCNPJ integration
+- **[v0.2.0](changelog/v0.2.0.md)** - OpenCNPJ, alphanumeric CNPJ, bug fixes
 - **[v0.1.0](changelog/v0.1.0.md)** - Initial release
 
 ## 🔗 Additional Resources
