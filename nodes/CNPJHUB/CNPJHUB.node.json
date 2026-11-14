@@ -1,5 +1,5 @@
 {
-	"node": "n8n-nodes-base.CNPJHUB",
+	"node": "n8n-nodes-cnpj-hub",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
 	"categories": [
@@ -8,7 +8,7 @@
 	"resources": {
 		"primaryDocumentation": [
 			{
-				"url": "https://github.com/douglassiqueira/n8n-nodes-cnpj-hub"
+				"url": "https://github.com/dssiqueira/n8n-nodes-cnpj-hub"
 			}
 		]
 	}

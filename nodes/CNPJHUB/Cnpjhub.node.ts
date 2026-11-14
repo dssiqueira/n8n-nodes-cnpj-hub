@@ -4,8 +4,11 @@ import {
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
+	JsonObject,
+	NodeApiError,
 	NodeConnectionType,
 	NodeOperationError,
+	sleep,
 } from 'n8n-workflow';
 
 export class Cnpjhub implements INodeType {
@@ -169,7 +172,7 @@ export class Cnpjhub implements INodeType {
 		): Promise<any> => {
 			// Aplicar delay se especificado
 			if (delay > 0) {
-				await new Promise(resolve => setTimeout(resolve, delay));
+				await sleep(delay);
 			}
 
 			return await this.helpers.httpRequest({
@@ -189,6 +192,7 @@ export class Cnpjhub implements INodeType {
 			apiStrategy: string,
 			specificApi: string | undefined,
 			delay: number,
+			itemIndex: number,
 		): Promise<{ data: any; apiUsed: string; errors: string[] }> => {
 			const apis = [
 				{ name: 'cnpjws', url: `https://publica.cnpj.ws/cnpj/${cnpj}` },
@@ -233,9 +237,12 @@ export class Cnpjhub implements INodeType {
 					const errorMsg = `${api.name}: ${error.message}`;
 					errors.push(errorMsg);
 
-					// Se for API específica, lançar erro imediatamente
+					// Se for API específica, lançar erro imediatamente (preservando o status HTTP)
 					if (apiStrategy === 'specific') {
-						throw new ApplicationError(errorMsg);
+						throw new NodeApiError(this.getNode(), error as JsonObject, {
+							itemIndex,
+							description: errorMsg,
+						});
 					}
 
 					// Continuar para próxima API no modo fallback
@@ -246,6 +253,10 @@ export class Cnpjhub implements INodeType {
 			// Se chegou aqui, todas as APIs falharam
 			throw new ApplicationError(`All APIs failed: ${errors.join('; ')}`);
 		};
+
+		// Monta telefone sem gerar "undefined": sem número não há telefone; DDD ausente é omitido
+		const buildPhone = (ddd?: string, phone?: string): string =>
+			phone ? `${ddd ?? ''}${phone}` : '';
 
 		// Função para normalizar dados de diferentes APIs
 		const normalizeApiResponse = (data: any, apiName: string): any => {
@@ -308,7 +319,10 @@ export class Cnpjhub implements INodeType {
 						uf: data.estabelecimento?.estado?.sigla || ''
 					};
 					normalized.contato = {
-						telefone: [data.estabelecimento?.ddd1 + data.estabelecimento?.telefone1, data.estabelecimento?.ddd2 + data.estabelecimento?.telefone2].filter(Boolean).join(' / '),
+						telefone: [
+							buildPhone(data.estabelecimento?.ddd1, data.estabelecimento?.telefone1),
+							buildPhone(data.estabelecimento?.ddd2, data.estabelecimento?.telefone2),
+						].filter(Boolean).join(' / '),
 						email: data.estabelecimento?.email || ''
 					};
 					normalized.socios = data.socios?.map((socio: any) => ({
@@ -533,6 +547,7 @@ export class Cnpjhub implements INodeType {
 							apiStrategy,
 							specificApi,
 							rateLimitDelay,
+							i,
 						);
 
 						// Escolher formato dos dados baseado na preferência do usuário
@@ -559,6 +574,10 @@ export class Cnpjhub implements INodeType {
 						returnData.push(executionData);
 
 					} catch (error) {
+						// Erros de API já vêm com status HTTP e mensagem amigável do n8n
+						if (error instanceof NodeApiError) {
+							throw error;
+						}
 						throw new NodeOperationError(
 							this.getNode(),
 							`Error querying CNPJ: ${error.message}`,
